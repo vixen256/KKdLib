@@ -414,28 +414,44 @@ std::wstring swprintf_s_string(_In_z_ _Printf_format_string_ const wchar_t* cons
 
 std::string vsprintf_s_string(_In_z_ _Printf_format_string_ const char* const fmt, va_list args) {
     char _buf[0x100];
+#ifdef _WIN32
     int32_t len = vsprintf_s(_buf, sizeof(_buf), fmt, args);
+#else
+    int32_t len = vsprintf(_buf, fmt, args);
+#endif
     if (len < 0)
         return {};
     else if (len < sizeof(_buf))
         return std::string(_buf, len);
 
     std::string buf(len, 0);
+#ifdef _WIN32
     if (vsprintf_s((char*)buf.data(), buf.size(), fmt, args) != len)
+#else
+    if (vsprintf((char*)buf.data(), fmt, args) != len)
+#endif
         return {};
     return buf;
 }
 
 std::wstring vswprintf_s_string(_In_z_ _Printf_format_string_ const wchar_t* const fmt, va_list args) {
     wchar_t _buf[0x100];
+#ifdef _WIN32
     int32_t len = vswprintf_s(_buf, sizeof(_buf) / sizeof(wchar_t), fmt, args);
+#else
+    int32_t len = vswprintf(_buf, sizeof(_buf) / sizeof(wchar_t), fmt, args);
+#endif
     if (len < 0)
         return {};
     else if (len < sizeof(_buf))
         return std::wstring(_buf, len);
 
     std::wstring buf(len, 0);
+#ifdef _WIN32
     if (vswprintf_s((wchar_t*)buf.data(), buf.size(), fmt, args) != len)
+#else
+    if (vswprintf((wchar_t*)buf.data(), buf.size(), fmt, args) != len)
+#endif
         return {};
     return buf;
 }

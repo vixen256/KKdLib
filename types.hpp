@@ -15,8 +15,8 @@
 #ifdef ssize_t
 #undef ssize_t
 #endif
-#ifdef _WIN64
-typedef __int64 ssize_t;
+#ifdef __x86_64__
+typedef int64_t ssize_t;
 #else
 typedef int size_t;
 #endif

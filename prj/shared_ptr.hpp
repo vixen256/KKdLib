@@ -193,7 +193,7 @@ namespace prj {
         }
 
         template<class U>
-        shared_ptr(nullptr_t) {
+        shared_ptr(std::nullptr_t n) {
             reset_ptr((T*)0);
         }
 

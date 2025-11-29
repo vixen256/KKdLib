@@ -19,7 +19,11 @@ namespace prj {
         int32_t hour;
         int32_t min;
         int32_t sec;
+#ifdef _WIN32
         if (sscanf_s(str.c_str(), "%4d-%2d-%2d %2d:%2d:%2d", &year, &month, &day, &hour, &min, &sec) == 6) {
+#else
+        if (sscanf(str.c_str(), "%4d-%2d-%2d %2d:%2d:%2d", &year, &month, &day, &hour, &min, &sec) == 6) {
+#endif
             struct tm time;
             time.tm_isdst = -1;
             time.tm_year = year - 1900;
@@ -28,7 +32,11 @@ namespace prj {
             time.tm_hour = hour;
             time.tm_min = min;
             time.tm_sec = sec;
+#ifdef _WIN32
             return prj::time(_mkgmtime(&time));
+#else
+            return prj::time(timegm(&time));
+#endif
         }
         return {};
     }

@@ -8,7 +8,11 @@
 #include "default.hpp"
 
 struct time_struct {
+#ifdef _WIN32
     LARGE_INTEGER timestamp;
+#else
+    clock_t timestamp;
+#endif
     double_t inv_freq;
 
     time_struct();

@@ -217,13 +217,21 @@ bool key_val::open_scope(std::string& str) {
 
 bool key_val::open_scope_fmt(int32_t i) {
     char buf[0x200];
+#ifdef _WIN32
     sprintf_s(buf, sizeof(buf), "%d", i);
+#else
+    sprintf(buf, "%d", i);
+#endif
     return open_scope(buf);
 }
 
 bool key_val::open_scope_fmt(uint32_t i) {
     char buf[0x200];
+#ifdef _WIN32
     sprintf_s(buf, sizeof(buf), "%u", i);
+#else
+    sprintf(buf, "%u", i);
+#endif
     return open_scope(buf);
 }
 
@@ -231,7 +239,11 @@ bool key_val::open_scope_fmt(_In_z_ _Printf_format_string_ const char* const fmt
     char buf[0x200];
     va_list args;
     va_start(args, fmt);
+#ifdef _WIN32
     vsprintf_s(buf, sizeof(buf), fmt, args);
+#else
+    vsprintf(buf, fmt, args);
+#endif
     va_end(args);
     return open_scope(buf);
 }
@@ -749,13 +761,21 @@ void key_val_out::open_scope(const char* str) {
 
 void key_val_out::open_scope_fmt(int32_t i) {
     char buf[0x100];
+#ifdef _WIN32
     sprintf_s(buf, sizeof(buf), "%d", i);
+#else
+    sprintf(buf, "%d", i);
+#endif
     open_scope(buf);
 }
 
 void key_val_out::open_scope_fmt(uint32_t i) {
     char buf[0x100];
+#ifdef _WIN32
     sprintf_s(buf, sizeof(buf), "%u", i);
+#else
+    sprintf(buf, "%u", i);
+#endif
     open_scope(buf);
 }
 
@@ -769,7 +789,11 @@ void key_val_out::write(stream& s, bool value) {
 
 void key_val_out::write(stream& s, float_t value) {
     char val_buf[0x100];
+#ifdef _WIN32
     sprintf_s(val_buf, 0x100, "%g", value);
+#else
+    sprintf(val_buf, "%g", value);
+#endif
 
     s.write_string(*curr_scope);
     s.write_char('=');
@@ -779,7 +803,11 @@ void key_val_out::write(stream& s, float_t value) {
 
 void key_val_out::write(stream& s, int32_t value) {
     char val_buf[0x100];
+#ifdef _WIN32
     sprintf_s(val_buf, 0x100, "%d", value);
+#else
+    sprintf(val_buf, "%d", value);
+#endif
 
     s.write_string(*curr_scope);
     s.write_char('=');
@@ -789,7 +817,11 @@ void key_val_out::write(stream& s, int32_t value) {
 
 void key_val_out::write(stream& s, uint32_t value) {
     char val_buf[0x100];
+#ifdef _WIN32
     sprintf_s(val_buf, 0x100, "%u", value);
+#else
+    sprintf(val_buf, "%u", value);
+#endif
 
     s.write_string(*curr_scope);
     s.write_char('=');
@@ -843,7 +875,11 @@ void key_val_out::write(stream& s, std::string& key, bool value) {
 
 void key_val_out::write(stream& s, const char* key, float_t value, const char* fmt) {
     char val_buf[0x100];
+#ifdef _WIN32
     sprintf_s(val_buf, 0x100, fmt, value);
+#else
+    sprintf(val_buf, fmt, value);
+#endif
 
     if (curr_scope->size()) {
         s.write_string(*curr_scope);
@@ -857,7 +893,11 @@ void key_val_out::write(stream& s, const char* key, float_t value, const char* f
 
 void key_val_out::write(stream& s, std::string& key, float_t value, const char* fmt) {
     char val_buf[0x100];
+#ifdef _WIN32
     sprintf_s(val_buf, 0x100, fmt, value);
+#else
+    sprintf(val_buf, fmt, value);
+#endif
 
     if (curr_scope->size()) {
         s.write_string(*curr_scope);
@@ -871,7 +911,11 @@ void key_val_out::write(stream& s, std::string& key, float_t value, const char* 
 
 void key_val_out::write(stream& s, const char* key, int32_t value) {
     char val_buf[0x100];
+#ifdef _WIN32
     sprintf_s(val_buf, 0x100, "%d", value);
+#else
+    sprintf(val_buf, "%d", value);
+#endif
 
     if (curr_scope->size()) {
         s.write_string(*curr_scope);
@@ -885,7 +929,11 @@ void key_val_out::write(stream& s, const char* key, int32_t value) {
 
 void key_val_out::write(stream& s, std::string& key, int32_t value) {
     char val_buf[0x100];
+#ifdef _WIN32
     sprintf_s(val_buf, 0x100, "%d", value);
+#else
+    sprintf(val_buf, "%d", value);
+#endif
 
     if (curr_scope->size()) {
         s.write_string(*curr_scope);
@@ -899,7 +947,11 @@ void key_val_out::write(stream& s, std::string& key, int32_t value) {
 
 void key_val_out::write(stream& s, const char* key, uint32_t value) {
     char val_buf[0x100];
+#ifdef _WIN32
     sprintf_s(val_buf, 0x100, "%u", value);
+#else
+    sprintf(val_buf, "%u", value);
+#endif
 
     if (curr_scope->size()) {
         s.write_string(*curr_scope);
@@ -913,7 +965,11 @@ void key_val_out::write(stream& s, const char* key, uint32_t value) {
 
 void key_val_out::write(stream& s, std::string& key, uint32_t value) {
     char val_buf[0x100];
+#ifdef _WIN32
     sprintf_s(val_buf, 0x100, "%u", value);
+#else
+    sprintf(val_buf, "%u", value);
+#endif
 
     if (curr_scope->size()) {
         s.write_string(*curr_scope);

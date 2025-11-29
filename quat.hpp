@@ -210,10 +210,17 @@ inline quat quat::mul(const quat& in_q1, const quat& in_q2) {
     zt1 = _mm_mul_ps(xt, _mm_shuffle_ps(yt, yt, 0x4E));
     zt2 = _mm_mul_ps(xt, _mm_shuffle_ps(yt, yt, 0xB1));
     zt3 = _mm_mul_ps(xt, _mm_shuffle_ps(yt, yt, 0xE4));
+#ifdef _MSC_VER
     zt0 = _mm_xor_ps(zt0, __m128({ 0.0f,  0.0f, -0.0f, 0.0f }));
     zt1 = _mm_xor_ps(zt1, __m128({ -0.0f,  0.0f,  0.0f, 0.0f }));
     zt2 = _mm_xor_ps(zt2, __m128({ 0.0f, -0.0f,  0.0f, 0.0f }));
     zt3 = _mm_xor_ps(zt3, __m128({ -0.0f, -0.0f, -0.0f, 0.0f }));
+#else
+    zt0 = _mm_xor_ps(zt0, __m128 { 0.0f,  0.0f, -0.0f, 0.0f });
+    zt1 = _mm_xor_ps(zt1, __m128 { -0.0f,  0.0f,  0.0f, 0.0f });
+    zt2 = _mm_xor_ps(zt2, __m128 { 0.0f, -0.0f,  0.0f, 0.0f });
+    zt3 = _mm_xor_ps(zt3, __m128 { -0.0f, -0.0f, -0.0f, 0.0f });
+#endif
     zt0 = _mm_hadd_ps(zt0, zt0);
     zt1 = _mm_hadd_ps(zt1, zt1);
     zt2 = _mm_hadd_ps(zt2, zt2);

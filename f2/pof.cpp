@@ -12,9 +12,9 @@ enum pof_value_type {
     POF_VALUE_INT32   = 0x3,
 };
 
-inline static bool pof_length_get_size(uint32_t* length, size_t val);
+static bool pof_length_get_size(uint32_t* length, size_t val);
 static size_t pof_read_offsets_count(stream& s);
-inline static bool pof_write_packed_value(stream& s, size_t val);
+static bool pof_write_packed_value(stream& s, size_t val);
 
 pof::pof() : shift_x() {
 
@@ -127,7 +127,7 @@ pof& pof::operator=(const pof& p) {
     return *this;
 }
 
-inline void io_write_offset_pof_add(stream& s, int64_t val,
+void io_write_offset_pof_add(stream& s, int64_t val,
     int32_t offset, bool is_x, pof* pof) {
     if (!is_x) {
         if (val)
@@ -142,7 +142,7 @@ inline void io_write_offset_pof_add(stream& s, int64_t val,
     }
 }
 
-inline void io_write_offset_f2_pof_add(stream& s, int64_t val,
+void io_write_offset_f2_pof_add(stream& s, int64_t val,
     int32_t offset, pof* pof) {
     if (val)
         val += offset;
@@ -150,13 +150,13 @@ inline void io_write_offset_f2_pof_add(stream& s, int64_t val,
     s.write_int32_t_reverse_endianness((int32_t)val);
 }
 
-inline void io_write_offset_x_pof_add(stream& s, int64_t val, pof* pof) {
+void io_write_offset_x_pof_add(stream& s, int64_t val, pof* pof) {
     s.align_write(0x08);
     pof->add(s, 0);
     s.write_int64_t_reverse_endianness(val);
 }
 
-inline static bool pof_length_get_size(uint32_t* length, size_t val) {
+static bool pof_length_get_size(uint32_t* length, size_t val) {
     *length += val < 0x40 ? 1 : val < 0x4000 ? 2 : val < 0x40000000 ? 4 : 1;
     return val >= 0x40000000;
 }

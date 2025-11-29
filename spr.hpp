@@ -85,7 +85,7 @@ namespace spr {
 
 struct SpriteData {
     uint32_t attr;
-    resolution_mode resolution_mode;
+    enum resolution_mode resolution_mode;
 };
 
 struct spr_set {

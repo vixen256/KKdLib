@@ -48,7 +48,11 @@ void memory_stream::align_read(size_t align) {
             size_t size = data.vec.size();
             data.vec.resize(pos + temp_align);
             data.data = data.vec.begin() + pos;
+#ifdef _MSC_VER
             memset(data.data._Ptr, 0, temp_align);
+#else
+            memset(data.data.base(), 0, temp_align);
+#endif
         }
         data.data += temp_align;
     }
@@ -63,7 +67,11 @@ void memory_stream::align_write(size_t align) {
             size_t size = data.vec.size();
             data.vec.resize(pos + temp_align);
             data.data = data.vec.begin() + pos;
+#ifdef _MSC_VER
             memset(data.data._Ptr, 0, temp_align);
+#else
+            memset(data.data.base(), 0, temp_align);
+#endif
         }
         data.data += temp_align;
     }
@@ -81,7 +89,11 @@ size_t memory_stream::read(void* buf, size_t count) {
     if (_count >= count)
         _count = count;
     if (buf)
+#ifdef _MSC_VER
         memcpy(buf, data.data._Ptr, _count);
+#else
+        memcpy(buf, data.data.base(), _count);
+#endif
     data.data += _count;
     return _count;
 }
@@ -94,7 +106,11 @@ size_t memory_stream::read(void* buf, size_t size, size_t count) {
     if (_count >= size * count)
         _count = size * count;
     if (buf)
+#ifdef _MSC_VER
         memcpy(buf, data.data._Ptr, _count);
+#else
+        memcpy(buf, data.data.base(), _count);
+#endif
     data.data += _count;
     return _count;
 }
@@ -110,9 +126,17 @@ size_t memory_stream::write(const void* buf, size_t count) {
         data.data = data.vec.begin() + pos;
     }
     if (buf)
+#ifdef _MSC_VER
         memcpy(data.data._Ptr, buf, count);
+#else
+        memcpy(data.data.base(), buf, count);
+#endif
     else
+#ifdef _MSC_VER
         memset(data.data._Ptr, 0, count);
+#else
+        memset(data.data.base(), 0, count);
+#endif
     data.data += count;
     return count;
 }
@@ -125,9 +149,17 @@ size_t memory_stream::write(const void* buf, size_t size, size_t count) {
         data.data = data.vec.begin() + pos;
     }
     if (buf)
+#ifdef _MSC_VER
         memcpy(data.data._Ptr, buf, _count);
+#else
+        memcpy(data.data.base(), buf, _count);
+#endif
     else
+#ifdef _MSC_VER
         memset(data.data._Ptr, 0, _count);
+#else
+        memset(data.data.base(), 0, _count);
+#endif
     data.data += _count;
     return _count;
 }

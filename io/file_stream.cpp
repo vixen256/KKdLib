@@ -4,7 +4,9 @@
 */
 
 #include "file_stream.hpp"
+#ifdef _WIN32
 #include <share.h>
+#endif
 
 file_stream::file_stream() : stream() {
 
@@ -39,14 +41,26 @@ bool file_stream::check_not_null() {
 }
 
 void file_stream::align_read(size_t align) {
+#ifdef _WIN32
     int64_t position = _ftelli64(stream);
+#else
+    int64_t position = ftello(stream);
+#endif
     size_t temp_align = align - position % align;
     if (align != temp_align)
+#ifdef _WIN32
         _fseeki64(stream, position + temp_align, 0);
+#else
+        fseeko(stream, position + temp_align, 0);
+#endif
 }
 
 void file_stream::align_write(size_t align) {
+#ifdef _WIN32
     int64_t position = _ftelli64(stream);
+#else
+    int64_t position = ftello(stream);
+#endif
     size_t temp_align = align - position % align;
     if (align != temp_align) {
             memset(buf, 0, min_def(sizeof(buf), temp_align));
@@ -139,10 +153,17 @@ int32_t file_stream::write_char(char c) {
 
 int64_t file_stream::get_length() {
     if (stream) {
+#ifdef _WIN32
         size_t temp = _ftelli64(stream);
         _fseeki64(stream, 0, SEEK_END);
         length = _ftelli64(stream);
         _fseeki64(stream, temp, SEEK_SET);
+#else
+        int64_t temp = ftello(stream);
+        fseeko(stream, 0, SEEK_END);
+        length = ftello(stream);
+        fseeko(stream, temp, SEEK_SET);
+#endif
     }
     else
         length = 0;
@@ -150,11 +171,19 @@ int64_t file_stream::get_length() {
 }
 
 int64_t file_stream::get_position() {
+#ifdef _WIN32
     return _ftelli64(stream);
+#else
+    return ftello(stream);
+#endif
 }
 
 int32_t file_stream::set_position(int64_t pos, int32_t seek) {
+#ifdef _WIN32
     return _fseeki64(stream, pos, seek);
+#else
+    return fseeko(stream, pos, seek);
+#endif
 }
 
 void file_stream::open(_In_z_ const char* path, _In_z_ const char* mode) {
@@ -163,6 +192,7 @@ void file_stream::open(_In_z_ const char* path, _In_z_ const char* mode) {
     if (!path || !mode)
         return;
 
+#ifdef _WIN32
     wchar_t* temp_path = utf8_to_utf16(path);
     wchar_t* temp_mode = utf8_to_utf16(mode);
     if (temp_path && temp_mode) {
@@ -171,6 +201,10 @@ void file_stream::open(_In_z_ const char* path, _In_z_ const char* mode) {
     }
     free(temp_path);
     free(temp_mode);
+#else
+    stream = fopen(path, mode);
+    get_length();
+#endif
 }
 
 void file_stream::open(_In_z_ const wchar_t* path, _In_z_ const wchar_t* mode) {
@@ -179,6 +213,17 @@ void file_stream::open(_In_z_ const wchar_t* path, _In_z_ const wchar_t* mode) {
     if (!path || !mode)
         return;
 
+#ifdef _WIN32
     stream = _wfsopen(path, mode, _SH_DENYNO);
     get_length();
+#else
+    char* temp_path = utf16_to_utf8(path);
+    char* temp_mode = utf16_to_utf8(mode);
+    if (temp_path && temp_mode) {
+        stream = fopen(temp_path, temp_mode);
+        get_length();
+    }
+    free(temp_path);
+    free(temp_mode);
+#endif
 }

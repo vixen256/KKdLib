@@ -17,8 +17,8 @@ struct f2_struct {
     std::vector<uint8_t> data;
     std::vector<f2_struct> sub_structs;
 
-    enrs enrs;
-    pof pof;
+    struct enrs enrs;
+    struct pof pof;
 
     f2_struct();
     ~f2_struct();

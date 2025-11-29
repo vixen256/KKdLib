@@ -13,13 +13,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <fileapi.h>
 #include <string>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <fileapi.h>
+#include <windows.h>
 
 #pragma warning(push)
 #pragma warning(disable: 26812)
+#else
+#include <byteswap.h>
+#include <dirent.h>
+#include <errno.h>
+#include <poll.h>
+#include <time.h>
+#include <stdarg.h>
+#include <sys/timerfd.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#define _Check_return_ __attribute__((warn_unused_result))
+#define _Ret_maybenull_
+#define _Ret_maybenull_z_
+#define _In_
+#define _In_z_
+#define _In_opt_
+#define _In_opt_z_
+#define _Inout_
+#define _Out_
+#define _Printf_format_string_
+#define _Post_writable_byte_size_(_size)
+#define _Out_writes_bytes_all_(_size)
+#define __CRTDECL
+#define _byteswap_ushort __bswap_16
+#define _byteswap_ulong __bswap_32
+#define _byteswap_uint64 __bswap_64
+#endif
 
 template <typename T>
 inline _Check_return_ _Ret_maybenull_ _Post_writable_byte_size_(sizeof(T)) T* malloc_T() {

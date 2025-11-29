@@ -47,7 +47,11 @@ _Check_return_ _Ret_maybenull_ const char* str_utils_get_next_int32_t(
     _In_opt_z_ const char* str, _Out_ int32_t& value, _In_ const char split) {
     std::string s;
     str = str_utils_get_next_string(str, s, split);
+#ifdef _WIN32
     sscanf_s(s.c_str(), "%d", &value);
+#else
+    sscanf(s.c_str(), "%d", &value);
+#endif
     return str;
 }
 
@@ -55,7 +59,11 @@ _Check_return_ _Ret_maybenull_ const wchar_t* str_utils_get_next_int32_t(
     _In_opt_z_ const wchar_t* str, _Out_ int32_t& value, _In_ const wchar_t split) {
     std::wstring s;
     str = str_utils_get_next_string(str, s, split);
+#ifdef _WIN32
     swscanf_s(s.c_str(), L"%d", &value);
+#else
+    swscanf(s.c_str(), L"%d", &value);
+#endif
     return str;
 }
 
@@ -63,7 +71,11 @@ _Check_return_ _Ret_maybenull_ const char* str_utils_get_next_float_t(
     _In_opt_z_ const char* str, _Out_ float_t& value, _In_ const char split) {
     std::string s;
     str = str_utils_get_next_string(str, s, split);
+#ifdef _WIN32
     sscanf_s(s.c_str(), "%f", &value);
+#else
+    sscanf(s.c_str(), "%f", &value);
+#endif
     return str;
 }
 
@@ -71,7 +83,11 @@ _Check_return_ _Ret_maybenull_ const wchar_t* str_utils_get_next_float_t(
     _In_opt_z_ const wchar_t* str, _Out_ float_t& value, _In_ const wchar_t split) {
     std::wstring s;
     str = str_utils_get_next_string(str, s, split);
+#ifdef _WIN32
     swscanf_s(s.c_str(), L"%f", &value);
+#else
+    swscanf(s.c_str(), L"%f", &value);
+#endif
     return str;
 }
 

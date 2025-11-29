@@ -23,9 +23,9 @@ static const uint8_t key_ft[] = {
     0xA2, 0x39, 0xB8, 0x3C, 0x15, 0x57, 0xC6, 0xBB,
 };
 
-static errno_t farc_get_files(farc* f);
+static int farc_get_files(farc* f);
 static void farc_pack_files(farc* f, stream& s, farc_signature signature, farc_flags flags, bool get_files = false);
-static errno_t farc_read_header(farc* f, stream& s);
+static int farc_read_header(farc* f, stream& s);
 static void farc_unpack_files(farc* f, stream& s, bool save);
 static void farc_unpack_file(farc* f, farc_file* ff);
 static void farc_unpack_file(farc* f, stream& s, farc_file* ff,
@@ -246,6 +246,7 @@ void farc::read(const wchar_t* path, bool unpack, bool save) {
 
     files.clear();
 
+#ifdef _WIN32
     wchar_t full_path_buf[MAX_PATH];
     wchar_t* full_path = _wfullpath(full_path_buf, path, MAX_PATH);
 
@@ -262,6 +263,20 @@ void farc::read(const wchar_t* path, bool unpack, bool save) {
     file_path.assign(dir_temp, dir_temp_len);
     directory_path.assign(dir_temp, dir_temp_len);
     free_def(dir_temp);
+#else
+    char* path_temp = utf16_to_utf8(path);
+    char full_path_buf[PATH_MAX];
+
+    if (realpath(path_temp, full_path_buf) != 0)
+        return;
+    else if (!path_check_file_exists(full_path_buf))
+        return;
+
+    size_t full_path_buf_len = utf8_length(full_path_buf);
+    file_path.assign(full_path_buf, full_path_buf_len);
+    directory_path.assign(full_path_buf, full_path_buf_len);
+    free_def(path_temp);
+#endif
 
     const char* dot = strrchr(directory_path.c_str(), '.');
     if (dot)
@@ -351,6 +366,7 @@ void farc::write(const wchar_t* path, farc_signature signature,
     if (get_files)
         files.clear();
 
+#ifdef _WIN32
     wchar_t full_path_buf[MAX_PATH];
     wchar_t* full_path = _wfullpath(full_path_buf, path, MAX_PATH);
 
@@ -369,6 +385,22 @@ void farc::write(const wchar_t* path, farc_signature signature,
     if (add_extension)
         file_path.append(".farc");
     free_def(dir_temp);
+#else
+    char* path_temp = utf16_to_utf8(path);
+    char full_path_buf[PATH_MAX];
+
+    if (realpath(path_temp, full_path_buf) != 0)
+        return;
+    else if (get_files && !path_check_file_exists(full_path_buf))
+        return;
+
+    size_t full_path_buf_len = utf8_length(full_path_buf);
+    file_path.assign(full_path_buf, full_path_buf_len);
+    directory_path.assign(full_path_buf, full_path_buf_len);
+    if (add_extension)
+        file_path.append(".farc");
+    free_def(path_temp);
+#endif
 
     if (!get_files || (get_files && !farc_get_files(this))) {
         file_stream s;
@@ -411,7 +443,7 @@ bool farc::load_file(void* data, const char* dir, const char* file, uint32_t has
     return !!f->files.size();
 }
 
-static errno_t farc_get_files(farc* f) {
+static int farc_get_files(farc* f) {
     f->files.clear();
     f->files.shrink_to_fit();
 
@@ -512,7 +544,11 @@ static void farc_pack_files(farc* f, stream& s, farc_signature signature, farc_f
     f->compression_level = clamp_def(f->compression_level, 0, 12);
 
     if (get_files) {
+#ifdef _WIN32
         char* temp = force_malloc<char>(dir_len + 2 + MAX_PATH);
+#else
+        char* temp = force_malloc<char>(dir_len + 2 + PATH_MAX);
+#endif
         memcpy(temp, f->directory_path.c_str(), sizeof(char) * dir_len);
         temp[dir_len] = '\\';
         for (farc_file& i : f->files) {
@@ -549,7 +585,7 @@ static void farc_pack_files(farc* f, stream& s, farc_signature signature, farc_f
     std::vector<size_t> size_compressed_enc;
     if (f->ft) {
         time_t t;
-        srand((uint32_t)_time64(&t));
+        srand((uint32_t)time(&t));
     }
 
     if (encrypted)
@@ -760,7 +796,7 @@ static void farc_pack_files(farc* f, stream& s, farc_signature signature, farc_f
     farc_write_padding(f, s, header_length + 0x08, signature != FARC_FArc);
 }
 
-static errno_t farc_read_header(farc* f, stream& s) {
+static int farc_read_header(farc* f, stream& s) {
     if (!f || s.check_null())
         return -1;
 
