@@ -738,10 +738,9 @@ void path_get_full_path(_Inout_ std::string& str) {
         str.assign(utf8_temp);
     free_def(utf8_temp);
 #else
-    char buf [PATH_MAX];
-    buf[0] = 0;
-    realpath(str.c_str(), buf);
+    char* buf = realpath(str.c_str(), nullptr);
     str.assign(buf);
+    free_def(buf);
 #endif
 }
 
@@ -752,16 +751,15 @@ void path_get_full_path(_Inout_ std::wstring& str) {
     GetFullPathNameW(str.c_str(), MAX_PATH * 2, buf, 0);
     str.assign(buf);
 #else
-    char buf [PATH_MAX];
-    buf[0] = 0;
     char* utf8_temp = utf16_to_utf8(str.c_str());
-    if (utf8_temp)
-        realpath(utf8_temp, buf);
+    if (!utf8_temp) return;
+    char* buf = realpath(utf8_temp, nullptr);
     free_def(utf8_temp);
 
     wchar_t* utf16_temp = utf8_to_utf16(buf);
     if (utf16_temp)
         str.assign(utf16_temp);
+    free_def(buf);
     free_def(utf16_temp);
 #endif
 }

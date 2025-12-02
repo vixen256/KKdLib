@@ -265,9 +265,9 @@ void farc::read(const wchar_t* path, bool unpack, bool save) {
     free_def(dir_temp);
 #else
     char* path_temp = utf16_to_utf8(path);
-    char full_path_buf[PATH_MAX];
+    char* full_path_buf = realpath(path_temp, nullptr);
 
-    if (realpath(path_temp, full_path_buf) != 0)
+    if (full_path_buf == 0)
         return;
     else if (!path_check_file_exists(full_path_buf))
         return;
@@ -275,6 +275,7 @@ void farc::read(const wchar_t* path, bool unpack, bool save) {
     size_t full_path_buf_len = utf8_length(full_path_buf);
     file_path.assign(full_path_buf, full_path_buf_len);
     directory_path.assign(full_path_buf, full_path_buf_len);
+    free_def(full_path_buf);
     free_def(path_temp);
 #endif
 
@@ -387,9 +388,9 @@ void farc::write(const wchar_t* path, farc_signature signature,
     free_def(dir_temp);
 #else
     char* path_temp = utf16_to_utf8(path);
-    char full_path_buf[PATH_MAX];
+    char* full_path_buf = realpath(path_temp, nullptr);
 
-    if (realpath(path_temp, full_path_buf) != 0)
+    if (full_path_buf == 0)
         return;
     else if (get_files && !path_check_file_exists(full_path_buf))
         return;
@@ -547,7 +548,8 @@ static void farc_pack_files(farc* f, stream& s, farc_signature signature, farc_f
 #ifdef _WIN32
         char* temp = force_malloc<char>(dir_len + 2 + MAX_PATH);
 #else
-        char* temp = force_malloc<char>(dir_len + 2 + PATH_MAX);
+        // Reasonable limit for individual NAME_MAX
+        char* temp = force_malloc<char>(dir_len + 2 + 255);
 #endif
         memcpy(temp, f->directory_path.c_str(), sizeof(char) * dir_len);
         temp[dir_len] = '\\';
