@@ -738,7 +738,15 @@ void path_get_full_path(_Inout_ std::string& str) {
         str.assign(utf8_temp);
     free_def(utf8_temp);
 #else
-    char* buf = realpath(str.c_str(), nullptr);
+    char* buf = nullptr;
+    if (!path_check_file_exists(str.c_str())) {
+        FILE* file_temp = fopen(str.c_str(), "w");
+        buf = realpath(str.c_str(), nullptr);
+        fclose(file_temp);
+        remove(str.c_str());
+    } else {
+        buf = realpath(str.c_str(), nullptr);
+    }
     str.assign(buf);
     free_def(buf);
 #endif
@@ -753,7 +761,15 @@ void path_get_full_path(_Inout_ std::wstring& str) {
 #else
     char* utf8_temp = utf16_to_utf8(str.c_str());
     if (!utf8_temp) return;
-    char* buf = realpath(utf8_temp, nullptr);
+    char* buf = nullptr;
+    if (!path_check_file_exists(utf8_temp)) {
+        FILE* file_temp = fopen(utf8_temp, "w");
+        buf = realpath(utf8_temp, nullptr);
+        fclose(file_temp);
+        remove(utf8_temp);
+    } else {
+        buf = realpath(utf8_temp, nullptr);
+    }
     free_def(utf8_temp);
 
     wchar_t* utf16_temp = utf8_to_utf16(buf);

@@ -265,7 +265,15 @@ void farc::read(const wchar_t* path, bool unpack, bool save) {
     free_def(dir_temp);
 #else
     char* path_temp = utf16_to_utf8(path);
-    char* full_path_buf = realpath(path_temp, nullptr);
+    char* full_path_buf = nullptr;
+    if (!path_check_file_exists(path_temp)) {
+        FILE* file_temp = fopen(path_temp, "w");
+        full_path_buf = realpath(path_temp, nullptr);
+        fclose(file_temp);
+        remove(path_temp);
+    } else {
+        full_path_buf = realpath(path_temp, nullptr);
+    }
 
     if (full_path_buf == 0)
         return;
@@ -388,7 +396,15 @@ void farc::write(const wchar_t* path, farc_signature signature,
     free_def(dir_temp);
 #else
     char* path_temp = utf16_to_utf8(path);
-    char* full_path_buf = realpath(path_temp, nullptr);
+    char* full_path_buf = nullptr;
+    if (!path_check_file_exists(path_temp)) {
+        FILE* file_temp = fopen(path_temp, "w");
+        full_path_buf = realpath(path_temp, nullptr);
+        fclose(file_temp);
+        remove(path_temp);
+    } else {
+        full_path_buf = realpath(path_temp, nullptr);
+    }
 
     if (full_path_buf == 0)
         return;
