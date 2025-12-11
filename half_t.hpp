@@ -6,6 +6,7 @@
 #pragma once
 
 #include "default.hpp"
+#include "simde/simde/x86/f16c.h"
 #include "simde/simde/x86/sse.h"
 #include "simde/simde/x86/sse2.h"
 
