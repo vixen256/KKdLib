@@ -26,9 +26,9 @@
 
 #ifdef __APPLE__
 #include <libkern/OSByteOrder.h>
-#define _byteswap_ushort NXSwapShort
-#define _byteswap_ulong NXSwapInt
-#define _byteswap_uint64 NXSwapLongLong
+#define _byteswap_ushort OSSwapInt16
+#define _byteswap_ulong OSSwapInt32
+#define _byteswap_uint64 OSSwapInt64
 #else
 #include <byteswap.h>
 #define _byteswap_ushort bswap_16
