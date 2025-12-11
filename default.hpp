@@ -23,7 +23,17 @@
 #pragma warning(push)
 #pragma warning(disable: 26812)
 #else
+#ifdef __APPLE__
+#include <libkern/OSByteOrder.h>
+#define _byteswap_ushort NXSwapShort
+#define _byteswap_ulong NXSwapInt
+#define _byteswap_uint64 NXSwapLongLong
+#else
 #include <byteswap.h>
+#define _byteswap_ushort bswap_16
+#define _byteswap_ulong bswap_32
+#define _byteswap_uint64 bswap_64
+#endif
 #include <dirent.h>
 #include <errno.h>
 #include <poll.h>
@@ -45,9 +55,6 @@
 #define _Post_writable_byte_size_(_size)
 #define _Out_writes_bytes_all_(_size)
 #define __CRTDECL
-#define _byteswap_ushort __bswap_16
-#define _byteswap_ulong __bswap_32
-#define _byteswap_uint64 __bswap_64
 #endif
 
 template <typename T>
