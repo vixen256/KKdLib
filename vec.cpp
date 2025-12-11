@@ -11,31 +11,11 @@ const __m128 vec4_neg = { -0.0f, -0.0f, -0.0f, -0.0f };
 
 const __m128d vec2d_neg = { -0.0, -0.0f };
 
-const __m128i vec2i_abs = (__m128i)(__v16qi){
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-    (char)0x00, (char)0x00, (char)0x00, (char)0x00,
-    (char)0x00, (char)0x00, (char)0x00, (char)0x00,
-};
+const __m128i vec2i_abs = { 0x7FFFFFFF7FFFFFFF, 0x0000000000000000 };
+const __m128i vec3i_abs = { 0x7FFFFFFF7FFFFFFF, 0x000000007FFFFFFF };
+const __m128i vec4i_abs = { 0x7FFFFFFF7FFFFFFF, 0x7FFFFFFF7FFFFFFF };
 
-const __m128i vec3i_abs = (__m128i)(__v16qi){
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-    (char)0x00, (char)0x00, (char)0x00, (char)0x00,
-};
-
-const __m128i vec4i_abs = (__m128i)(__v16qi){
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-};
-
-const __m128i vec2i64_abs = (__m128i)(__v16qi){
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-    (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, (char)0xFF, (char)0x7F,
-};
+const __m128i vec2i64_abs = { 0x7FFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF };
 
 void vec3::axis_angle_from_vectors(vec3& axis, float_t& angle, const vec3& vec1, const vec3& vec2) {
     axis = vec3::cross(vec1, vec2);
