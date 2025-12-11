@@ -99,8 +99,8 @@ struct waitable_timer {
 #elif defined(__GLIBC__)
         if (fd > -1) {
             struct itimerspec wait_time;
-            wait_time.it_value.tv_sec = msec / 1000;
-            wait_time.it_value.tv_nsec = fmod(msec, 1000) * 1000000;
+            wait_time.it_value.tv_sec = msec / 1000.0;
+            wait_time.it_value.tv_nsec = fmod(msec, 1000.0) * 1000000.0;
             wait_time.it_interval.tv_sec = 0;
             wait_time.it_interval.tv_nsec = 0;
             timerfd_settime(fd, 0, &wait_time, nullptr);
@@ -112,14 +112,14 @@ struct waitable_timer {
             poll(&fds, 1, -1);
         } else {
             struct timespec wait_time;
-            wait_time.tv_sec = msec / 1000;
-            wait_time.tv_nsec = fmod(msec, 1000) * 1000000;
+            wait_time.tv_sec = msec / 1000.0;
+            wait_time.tv_nsec = fmod(msec, 1000.0) * 1000000.0;
             nanosleep(&wait_time, nullptr);
         }
 #else
         struct timespec wait_time;
-        wait_time.tv_sec = msec / 1000;
-        wait_time.tv_nsec = msec % 1000 * 1000000;
+        wait_time.tv_sec = msec / 1000.0;
+        wait_time.tv_nsec = fmod(msec, 1000.0) * 1000000.0;
         nanosleep(&wait_time, nullptr);
 #endif
     }
