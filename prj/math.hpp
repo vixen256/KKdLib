@@ -6,8 +6,7 @@
 #pragma once
 
 #include "../default.hpp"
-#include <xmmintrin.h>
-#include <emmintrin.h>
+#include "simde/simde/x86/sse2.h"
 
 namespace prj {
     inline int32_t extract_sign(const float_t x) {

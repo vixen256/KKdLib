@@ -7,8 +7,7 @@
 
 #include "default.hpp"
 #include "half_t.hpp"
-#include <xmmintrin.h>
-#include <emmintrin.h>
+#include "simde/simde/x86/sse2.h"
 
 struct vec2i8 {
     int8_t x;

@@ -7,9 +7,7 @@
 
 #include "default.hpp"
 
-#if defined(__SSE2__) && defined(__AES__)
-#include <immintrin.h>
-#endif
+#include "simde/simde/x86/sse2.h"
 
 //#define AES128 1
 //#define AES192 1
