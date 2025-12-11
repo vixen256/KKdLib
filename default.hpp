@@ -5,6 +5,7 @@
 
 #pragma once
 
+#define SIMDE_ENABLE_NATIVE_ALIASES
 #define NOMINMAX
 #define _USE_MATH_DEFINES
 #include "types.hpp"
