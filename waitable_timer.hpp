@@ -8,27 +8,27 @@
 #include "default.hpp"
 
 struct waitable_timer {
-#ifdef _WIN32
+#if defined(_WIN32)
     HANDLE handle;
-#else
+#elif defined(__GLIBC__)
     int fd;
 #endif
 
     inline waitable_timer() {
 #ifdef _WIN32
         handle = CreateWaitableTimerW(0, 0, 0);
-#else
+#elif defined(__GLIBC__)
         fd = timerfd_create(CLOCK_MONOTONIC, 0);
 #endif
     }
 
     inline ~waitable_timer() {
-#ifdef _WIN32
+#if defined(_WIN32)
         if (handle) {
             CloseHandle(handle);
             handle = 0;
         }
-#else
+#elif defined(__GLIBC__)
         if (fd > -1) {
             close(fd);
             fd = 0;
@@ -40,7 +40,7 @@ struct waitable_timer {
         if (msec <= 0.0)
             return;
 
-#ifdef _WIN32
+#if defined(_WIN32)
         if (handle) {
             LARGE_INTEGER t;
             t.QuadPart = (LONGLONG)(msec * -10000);
@@ -52,7 +52,7 @@ struct waitable_timer {
             if (msec_dw)
                 Sleep(msec_dw);
         }
-#else
+#elif defined(__GLIBC__)
         if (fd > -1) {
             struct itimerspec wait_time;
             wait_time.it_value.tv_sec = msec / 1000;
@@ -72,6 +72,11 @@ struct waitable_timer {
             wait_time.tv_nsec = msec % 1000 * 1000000;
             nanosleep(&wait_time, nullptr);
         }
+#else
+        struct timespec wait_time;
+        wait_time.tv_sec = msec / 1000;
+        wait_time.tv_nsec = msec % 1000 * 1000000;
+        nanosleep(&wait_time, nullptr);
 #endif
     }
 
@@ -79,7 +84,7 @@ struct waitable_timer {
         if (msec <= 0.0)
             return;
 
-#ifdef _WIN32
+#if defined(_WIN32)
         if (handle) {
             LARGE_INTEGER t;
             t.QuadPart = (LONGLONG)round(msec * -10000.0);
@@ -91,7 +96,7 @@ struct waitable_timer {
             if (msec_dw)
                 Sleep(msec_dw);
         }
-#else
+#elif defined(__GLIBC__)
         if (fd > -1) {
             struct itimerspec wait_time;
             wait_time.it_value.tv_sec = msec / 1000;
@@ -111,6 +116,11 @@ struct waitable_timer {
             wait_time.tv_nsec = fmod(msec, 1000) * 1000000;
             nanosleep(&wait_time, nullptr);
         }
+#else
+        struct timespec wait_time;
+        wait_time.tv_sec = msec / 1000;
+        wait_time.tv_nsec = msec % 1000 * 1000000;
+        nanosleep(&wait_time, nullptr);
 #endif
     }
 };
