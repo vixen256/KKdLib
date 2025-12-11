@@ -124,8 +124,6 @@ static const uint8_t Rcon[11] = {
  *  up to rcon[8] for AES-192, up to rcon[7] for AES-256. rcon[0] is not used in AES algorithm."
  */
 
-extern bool cpu_caps_aes_ni;
-
 // This function produces Nb(Nr+1) round keys. The round keys are used in each round to decrypt the states.
 static void key_expansion_aes128(uint8_t* RoundKey, const uint8_t* Key) {
     unsigned i, j, k;
@@ -304,6 +302,7 @@ static void key_expansion_aes256(uint8_t* RoundKey, const uint8_t* Key) {
     }
 }
 
+#if defined(__SSE2__) && defined(__AES__)
 inline static __m128i key_expansion_aes128_ni_assist(__m128i temp1, __m128i temp2) {
     __m128i temp3;
     temp2 = _mm_shuffle_epi32(temp2, 0xFF);
@@ -506,49 +505,56 @@ static void key_expansion_aes256_ni(__m128i* RoundKey, const uint8_t* Key) {
     RoundKey[26] = _mm_aesimc_si128(RoundKey[2]);
     RoundKey[27] = _mm_aesimc_si128(RoundKey[1]);
 }
+#endif
 
 void aes128_init_ctx(aes128_ctx* ctx, const uint8_t* key) {
-    if (cpu_caps_aes_ni)
-        key_expansion_aes128_ni(ctx->RoundKeyNI, key);
-    else
-        key_expansion_aes128(ctx->RoundKey, key);
+#if defined(__SSE2__) && defined(__AES__)
+    key_expansion_aes128_ni(ctx->RoundKeyNI, key);
+#else
+    key_expansion_aes128(ctx->RoundKey, key);
+#endif
 }
 
 void aes192_init_ctx(aes192_ctx* ctx, const uint8_t* key) {
-    if (cpu_caps_aes_ni)
-        key_expansion_aes192_ni(ctx->RoundKeyNI, key);
-    else
-        key_expansion_aes192(ctx->RoundKey, key);
+#if defined(__SSE2__) && defined(__AES__)
+    key_expansion_aes192_ni(ctx->RoundKeyNI, key);
+#else
+    key_expansion_aes192(ctx->RoundKey, key);
+#endif
 }
 
 void aes256_init_ctx(aes256_ctx* ctx, const uint8_t* key) {
-    if (cpu_caps_aes_ni)
-        key_expansion_aes256_ni(ctx->RoundKeyNI, key);
-    else
-        key_expansion_aes256(ctx->RoundKey, key);
+#if defined(__SSE2__) && defined(__AES__)
+    key_expansion_aes256_ni(ctx->RoundKeyNI, key);
+#else
+    key_expansion_aes256(ctx->RoundKey, key);
+#endif
 }
 
 void aes128_init_ctx_iv(aes128_ctx* ctx, const uint8_t* key, const uint8_t* iv) {
-    if (cpu_caps_aes_ni)
-        key_expansion_aes128_ni(ctx->RoundKeyNI, key);
-    else
-        key_expansion_aes128(ctx->RoundKey, key);
+#if defined(__SSE2__) && defined(__AES__)
+    key_expansion_aes128_ni(ctx->RoundKeyNI, key);
+#else
+    key_expansion_aes128(ctx->RoundKey, key);
+#endif
     memcpy(ctx->Iv, iv, AES_BLOCKLEN);
 }
 
 void aes192_init_ctx_iv(aes192_ctx* ctx, const uint8_t* key, const uint8_t* iv) {
-    if (cpu_caps_aes_ni)
-        key_expansion_aes192_ni(ctx->RoundKeyNI, key);
-    else
-        key_expansion_aes192(ctx->RoundKey, key);
+#if defined(__SSE2__) && defined(__AES__)
+    key_expansion_aes192_ni(ctx->RoundKeyNI, key);
+#else
+    key_expansion_aes192(ctx->RoundKey, key);
+#endif
     memcpy(ctx->Iv, iv, AES_BLOCKLEN);
 }
 
 void aes256_init_ctx_iv(aes256_ctx* ctx, const uint8_t* key, const uint8_t* iv) {
-    if (cpu_caps_aes_ni)
-        key_expansion_aes256_ni(ctx->RoundKeyNI, key);
-    else
-        key_expansion_aes256(ctx->RoundKey, key);
+#if defined(__SSE2__) && defined(__AES__)
+    key_expansion_aes256_ni(ctx->RoundKeyNI, key);
+#else
+    key_expansion_aes256(ctx->RoundKey, key);
+#endif
     memcpy(ctx->Iv, iv, AES_BLOCKLEN);
 }
 
@@ -762,6 +768,7 @@ inline static void cipher_aes256(state_t* state, const uint8_t* RoundKey) {
     add_round_key(Nr256, state, RoundKey);
 }
 
+#if defined(__SSE2__) && defined(__AES__)
 inline static void cipher_aes128_ni(void* state, __m128i* round_key) {
     __m128i m = _mm_loadu_si128((__m128i*)state);
     m = _mm_xor_si128(m, round_key[0]);
@@ -815,6 +822,7 @@ inline static void cipher_aes256_ni(void* state, __m128i* round_key) {
     m = _mm_aesenclast_si128(m, round_key[14]);
     _mm_storeu_si128((__m128i*)state, m);
 }
+#endif
 
 inline static void inv_cipher_aes128(state_t* state, const uint8_t* RoundKey) {
     uint8_t round = 0;
@@ -882,6 +890,7 @@ inline static void inv_cipher_aes256(state_t* state, const uint8_t* RoundKey) {
 
 }
 
+#if defined(__SSE2__) && defined(__AES__)
 inline static void inv_cipher_aes128_ni(void* state, __m128i* round_key) {
     __m128i m = _mm_loadu_si128((__m128i*)state);
     m = _mm_xor_si128(m, round_key[10]);
@@ -935,112 +944,126 @@ inline static void inv_cipher_aes256_ni(void* state, __m128i* round_key) {
     m = _mm_aesdeclast_si128(m, round_key[0]);
     _mm_storeu_si128((__m128i*)state, m);
 }
+#endif
 
 /*****************************************************************************/
 /* Public functions:                                                         */
 /*****************************************************************************/
 void aes128_ecb_encrypt(aes128_ctx* ctx, uint8_t* buf) {
     // The next function call encrypts the PlainText with the Key using AES algorithm.
-    if (cpu_caps_aes_ni)
-        cipher_aes128_ni(buf, ctx->RoundKeyNI);
-    else
-        cipher_aes128((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    cipher_aes128_ni(buf, ctx->RoundKeyNI);
+#else
+    cipher_aes128((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes192_ecb_encrypt(aes192_ctx* ctx, uint8_t* buf) {
     // The next function call encrypts the PlainText with the Key using AES algorithm.
-    if (cpu_caps_aes_ni)
-        cipher_aes192_ni(buf, ctx->RoundKeyNI);
-    else
-        cipher_aes192((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    cipher_aes192_ni(buf, ctx->RoundKeyNI);
+#else
+    cipher_aes192((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes256_ecb_encrypt(aes256_ctx* ctx, uint8_t* buf) {
     // The next function call encrypts the PlainText with the Key using AES algorithm.
-    if (cpu_caps_aes_ni)
-        cipher_aes256_ni(buf, ctx->RoundKeyNI);
-    else
-        cipher_aes256((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    cipher_aes256_ni(buf, ctx->RoundKeyNI);
+#else
+    cipher_aes256((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes128_ecb_decrypt(aes128_ctx* ctx, uint8_t* buf) {
     // The next function call decrypts the PlainText with the Key using AES algorithm.
-    if (cpu_caps_aes_ni)
-        inv_cipher_aes128_ni(buf, ctx->RoundKeyNI);
-    else
-        inv_cipher_aes128((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    inv_cipher_aes128_ni(buf, ctx->RoundKeyNI);
+#else
+    inv_cipher_aes128((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes192_ecb_decrypt(aes192_ctx* ctx, uint8_t* buf) {
     // The next function call decrypts the PlainText with the Key using AES algorithm.
-    if (cpu_caps_aes_ni)
-        inv_cipher_aes192_ni(buf, ctx->RoundKeyNI);
-    else
-        inv_cipher_aes192((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    inv_cipher_aes192_ni(buf, ctx->RoundKeyNI);
+#else
+    inv_cipher_aes192((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes256_ecb_decrypt(aes256_ctx* ctx, uint8_t* buf) {
     // The next function call decrypts the PlainText with the Key using AES algorithm.
-    if (cpu_caps_aes_ni)
-        inv_cipher_aes256_ni(buf, ctx->RoundKeyNI);
-    else
-        inv_cipher_aes256((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    inv_cipher_aes256_ni(buf, ctx->RoundKeyNI);
+#else
+    inv_cipher_aes256((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes128_ecb_encrypt_buffer(aes128_ctx* ctx, uint8_t* buf, size_t length) {
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            cipher_aes128_ni(buf, ctx->RoundKeyNI);
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            cipher_aes128((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        cipher_aes128_ni(buf, ctx->RoundKeyNI);
+#else
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        cipher_aes128((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes192_ecb_encrypt_buffer(aes192_ctx* ctx, uint8_t* buf, size_t length) {
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            cipher_aes192_ni(buf, ctx->RoundKeyNI);
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            cipher_aes192((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        cipher_aes192_ni(buf, ctx->RoundKeyNI);
+#else
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        cipher_aes192((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes256_ecb_encrypt_buffer(aes256_ctx* ctx, uint8_t* buf, size_t length) {
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            cipher_aes256_ni(buf, ctx->RoundKeyNI);
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            cipher_aes256((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        cipher_aes256_ni(buf, ctx->RoundKeyNI);
+#else
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        cipher_aes256((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes128_ecb_decrypt_buffer(aes128_ctx* ctx, uint8_t* buf, size_t length) {
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            inv_cipher_aes128_ni(buf, ctx->RoundKeyNI);
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            inv_cipher_aes128((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        inv_cipher_aes128_ni(buf, ctx->RoundKeyNI);
+#else
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        inv_cipher_aes128((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes192_ecb_decrypt_buffer(aes192_ctx* ctx, uint8_t* buf, size_t length) {
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            inv_cipher_aes192_ni(buf, ctx->RoundKeyNI);
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            inv_cipher_aes192((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        inv_cipher_aes192_ni(buf, ctx->RoundKeyNI);
+#else
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        inv_cipher_aes192((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
 void aes256_ecb_decrypt_buffer(aes256_ctx* ctx, uint8_t* buf, size_t length) {
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            inv_cipher_aes256_ni(buf, ctx->RoundKeyNI);
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
-            inv_cipher_aes256((state_t*)buf, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        inv_cipher_aes256_ni(buf, ctx->RoundKeyNI);
+#else
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN)
+        inv_cipher_aes256((state_t*)buf, ctx->RoundKey);
+#endif
 }
 
+#if defined(__SSE2__) && defined(__AES__)
 inline static void XorWithIv(uint8_t* buf, const uint8_t* Iv) {
     _mm_storeu_si128((__m128i*)buf,
         _mm_xor_si128(
@@ -1049,209 +1072,175 @@ inline static void XorWithIv(uint8_t* buf, const uint8_t* Iv) {
         )
     );
 }
+#else
+inline static void XorWithIv(uint8_t* buf, const uint8_t* Iv)
+{
+    uint8_t i;
+    for (i = 0; i < AES_BLOCKLEN; ++i) // The block in AES is always 128bit no matter the key size
+        buf[i] ^= Iv[i];
+}
+#endif
 
 void aes128_cbc_encrypt(aes128_ctx* ctx, uint8_t buf[AES_BLOCKLEN]) {
     uint8_t* Iv = ctx->Iv;
-    if (cpu_caps_aes_ni) {
-        XorWithIv(buf, Iv);
-        cipher_aes128_ni(buf, ctx->RoundKeyNI);
-        Iv = buf;
-    }
-    else {
-        XorWithIv(buf, Iv);
-        cipher_aes128((state_t*)buf, ctx->RoundKey);
-        Iv = buf;
-    }
+    XorWithIv(buf, Iv);
+#if defined(__SSE2__) && defined(__AES__)
+    cipher_aes128_ni(buf, ctx->RoundKeyNI);
+#else
+    cipher_aes128((state_t*)buf, ctx->RoundKey);
+#endif
+    Iv = buf;
     /* store Iv in ctx for next call */
     memcpy(ctx->Iv, Iv, AES_BLOCKLEN);
 }
 
 void aes192_cbc_encrypt(aes192_ctx* ctx, uint8_t buf[AES_BLOCKLEN]) {
     uint8_t* Iv = ctx->Iv;
-    if (cpu_caps_aes_ni) {
-        XorWithIv(buf, Iv);
-        cipher_aes192_ni(buf, ctx->RoundKeyNI);
-        Iv = buf;
-    }
-    else {
-        XorWithIv(buf, Iv);
-        cipher_aes192((state_t*)buf, ctx->RoundKey);
-        Iv = buf;
-    }
+    XorWithIv(buf, Iv);
+#if defined(__SSE2__) && defined(__AES__)
+    cipher_aes192_ni(buf, ctx->RoundKeyNI);
+#else
+    cipher_aes192((state_t*)buf, ctx->RoundKey);
+#endif
+    Iv = buf;
     /* store Iv in ctx for next call */
     memcpy(ctx->Iv, Iv, AES_BLOCKLEN);
 }
 
 void aes256_cbc_encrypt(aes256_ctx* ctx, uint8_t buf[AES_BLOCKLEN]) {
     uint8_t* Iv = ctx->Iv;
-    if (cpu_caps_aes_ni) {
-        XorWithIv(buf, Iv);
-        cipher_aes256_ni(buf, ctx->RoundKeyNI);
-        Iv = buf;
-    }
-    else {
-        XorWithIv(buf, Iv);
-        cipher_aes256((state_t*)buf, ctx->RoundKey);
-        Iv = buf;
-    }
+    XorWithIv(buf, Iv);
+#if defined(__SSE2__) && defined(__AES__)
+    cipher_aes256_ni(buf, ctx->RoundKeyNI);
+#else
+    cipher_aes256((state_t*)buf, ctx->RoundKey);
+#endif
+    Iv = buf;
     /* store Iv in ctx for next call */
     memcpy(ctx->Iv, Iv, AES_BLOCKLEN);
 }
 
 void aes128_cbc_decrypt(aes128_ctx* ctx, uint8_t buf[AES_BLOCKLEN]) {
     uint8_t storeNextIv[AES_BLOCKLEN];
-    if (cpu_caps_aes_ni) {
-        memcpy(storeNextIv, buf, AES_BLOCKLEN);
-        inv_cipher_aes128_ni(buf, ctx->RoundKeyNI);
-        XorWithIv(buf, ctx->Iv);
-        memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-    }
-    else {
-        memcpy(storeNextIv, buf, AES_BLOCKLEN);
-        inv_cipher_aes128((state_t*)buf, ctx->RoundKey);
-        XorWithIv(buf, ctx->Iv);
-        memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-    }
+    memcpy(storeNextIv, buf, AES_BLOCKLEN);
+#if defined(__SSE2__) && defined(__AES__)
+    inv_cipher_aes128_ni(buf, ctx->RoundKeyNI);
+#else
+    inv_cipher_aes128((state_t*)buf, ctx->RoundKey);
+#endif
+    XorWithIv(buf, ctx->Iv);
+    memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
 }
 
 void aes192_cbc_decrypt(aes192_ctx* ctx, uint8_t buf[AES_BLOCKLEN]) {
     uint8_t storeNextIv[AES_BLOCKLEN];
-    if (cpu_caps_aes_ni) {
-        memcpy(storeNextIv, buf, AES_BLOCKLEN);
-        inv_cipher_aes192_ni(buf, ctx->RoundKeyNI);
-        XorWithIv(buf, ctx->Iv);
-        memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-    }
-    else {
-        memcpy(storeNextIv, buf, AES_BLOCKLEN);
-        inv_cipher_aes192((state_t*)buf, ctx->RoundKey);
-        XorWithIv(buf, ctx->Iv);
-        memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-    }
+    memcpy(storeNextIv, buf, AES_BLOCKLEN);
+#if defined(__SSE2__) && defined(__AES__)
+    inv_cipher_aes192_ni(buf, ctx->RoundKeyNI);
+#else
+    inv_cipher_aes192((state_t*)buf, ctx->RoundKey);
+#endif
+    XorWithIv(buf, ctx->Iv);
+    memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
 }
 
 void aes256_cbc_decrypt(aes256_ctx* ctx, uint8_t buf[AES_BLOCKLEN]) {
     uint8_t storeNextIv[AES_BLOCKLEN];
-    if (cpu_caps_aes_ni) {
-        memcpy(storeNextIv, buf, AES_BLOCKLEN);
-        inv_cipher_aes256_ni(buf, ctx->RoundKeyNI);
-        XorWithIv(buf, ctx->Iv);
-        memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-    }
-    else {
-        memcpy(storeNextIv, buf, AES_BLOCKLEN);
-        inv_cipher_aes256((state_t*)buf, ctx->RoundKey);
-        XorWithIv(buf, ctx->Iv);
-        memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-    }
+    memcpy(storeNextIv, buf, AES_BLOCKLEN);
+#if defined(__SSE2__) && defined(__AES__)
+    inv_cipher_aes256_ni(buf, ctx->RoundKeyNI);
+#else
+    inv_cipher_aes256((state_t*)buf, ctx->RoundKey);
+#endif
+    XorWithIv(buf, ctx->Iv);
+    memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
 }
 
 void aes128_cbc_encrypt_buffer(aes128_ctx *ctx, uint8_t* buf, size_t length) {
     uint8_t* Iv = ctx->Iv;
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            XorWithIv(buf, Iv);
-            cipher_aes128_ni(buf, ctx->RoundKeyNI);
-            Iv = buf;
-        }
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            XorWithIv(buf, Iv);
-            cipher_aes128((state_t*)buf, ctx->RoundKey);
-            Iv = buf;
-        }
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
+        XorWithIv(buf, Iv);
+#if defined(__SSE2__) && defined(__AES__)
+        cipher_aes128_ni(buf, ctx->RoundKeyNI);
+#else
+        cipher_aes128((state_t*)buf, ctx->RoundKey);
+#endif
+        Iv = buf;
+    }
     /* store Iv in ctx for next call */
     memcpy(ctx->Iv, Iv, AES_BLOCKLEN);
 }
 
 void aes192_cbc_encrypt_buffer(aes192_ctx *ctx, uint8_t* buf, size_t length) {
     uint8_t* Iv = ctx->Iv;
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            XorWithIv(buf, Iv);
-            cipher_aes192_ni(buf, ctx->RoundKeyNI);
-            Iv = buf;
-        }
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            XorWithIv(buf, Iv);
-            cipher_aes192((state_t*)buf, ctx->RoundKey);
-            Iv = buf;
-        }
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
+        XorWithIv(buf, Iv);
+#if defined(__SSE2__) && defined(__AES__)
+        cipher_aes192_ni(buf, ctx->RoundKeyNI);
+#else
+        cipher_aes192((state_t*)buf, ctx->RoundKey);
+#endif
+        Iv = buf;
+    }
     /* store Iv in ctx for next call */
     memcpy(ctx->Iv, Iv, AES_BLOCKLEN);
 }
 
 void aes256_cbc_encrypt_buffer(aes256_ctx *ctx, uint8_t* buf, size_t length) {
     uint8_t* Iv = ctx->Iv;
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            XorWithIv(buf, Iv);
-            cipher_aes256_ni(buf, ctx->RoundKeyNI);
-            Iv = buf;
-        }
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            XorWithIv(buf, Iv);
-            cipher_aes256((state_t*)buf, ctx->RoundKey);
-            Iv = buf;
-        }
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
+        XorWithIv(buf, Iv);
+#if defined(__SSE2__) && defined(__AES__)
+        cipher_aes256_ni(buf, ctx->RoundKeyNI);
+#else
+        cipher_aes256((state_t*)buf, ctx->RoundKey);
+#endif
+        Iv = buf;
+    }
     /* store Iv in ctx for next call */
     memcpy(ctx->Iv, Iv, AES_BLOCKLEN);
 }
 
 void aes128_cbc_decrypt_buffer(aes128_ctx* ctx, uint8_t* buf, size_t length) {
     uint8_t storeNextIv[AES_BLOCKLEN];
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            memcpy(storeNextIv, buf, AES_BLOCKLEN);
-            inv_cipher_aes128_ni(buf, ctx->RoundKeyNI);
-            XorWithIv(buf, ctx->Iv);
-            memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-        }
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            memcpy(storeNextIv, buf, AES_BLOCKLEN);
-            inv_cipher_aes128((state_t*)buf, ctx->RoundKey);
-            XorWithIv(buf, ctx->Iv);
-            memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-        }
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
+        memcpy(storeNextIv, buf, AES_BLOCKLEN);
+#if defined(__SSE2__) && defined(__AES__)
+        inv_cipher_aes128_ni(buf, ctx->RoundKeyNI);
+#else
+        inv_cipher_aes128((state_t*)buf, ctx->RoundKey);
+#endif
+        XorWithIv(buf, ctx->Iv);
+        memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
+    }
 }
 
 void aes192_cbc_decrypt_buffer(aes192_ctx* ctx, uint8_t* buf, size_t length) {
     uint8_t storeNextIv[AES_BLOCKLEN];
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            memcpy(storeNextIv, buf, AES_BLOCKLEN);
-            inv_cipher_aes192_ni(buf, ctx->RoundKeyNI);
-            XorWithIv(buf, ctx->Iv);
-            memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-        }
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            memcpy(storeNextIv, buf, AES_BLOCKLEN);
-            inv_cipher_aes192((state_t*)buf, ctx->RoundKey);
-            XorWithIv(buf, ctx->Iv);
-            memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-        }
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
+        memcpy(storeNextIv, buf, AES_BLOCKLEN);
+#if defined(__SSE2__) && defined(__AES__)
+        inv_cipher_aes192_ni(buf, ctx->RoundKeyNI);
+#else
+        inv_cipher_aes192((state_t*)buf, ctx->RoundKey);
+#endif
+        XorWithIv(buf, ctx->Iv);
+        memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
+    }
 }
 
 void aes256_cbc_decrypt_buffer(aes256_ctx* ctx, uint8_t* buf, size_t length) {
     uint8_t storeNextIv[AES_BLOCKLEN];
-    if (cpu_caps_aes_ni)
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            memcpy(storeNextIv, buf, AES_BLOCKLEN);
-            inv_cipher_aes256_ni(buf, ctx->RoundKeyNI);
-            XorWithIv(buf, ctx->Iv);
-            memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-        }
-    else
-        for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
-            memcpy(storeNextIv, buf, AES_BLOCKLEN);
-            inv_cipher_aes256((state_t*)buf, ctx->RoundKey);
-            XorWithIv(buf, ctx->Iv);
-            memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
-        }
+    for (size_t i = 0; i < length; i += AES_BLOCKLEN, buf += AES_BLOCKLEN) {
+        memcpy(storeNextIv, buf, AES_BLOCKLEN);
+#if defined(__SSE2__) && defined(__AES__)
+        inv_cipher_aes256_ni(buf, ctx->RoundKeyNI);
+#else
+        inv_cipher_aes256((state_t*)buf, ctx->RoundKey);
+#endif
+        XorWithIv(buf, ctx->Iv);
+        memcpy(ctx->Iv, storeNextIv, AES_BLOCKLEN);
+    }
 }
 
 /* Symmetrical operation: same function for encrypting as for decrypting. Note any IV/nonce should never be reused with the same key */
@@ -1263,10 +1252,11 @@ void aes128_ctr_xcrypt_buffer(aes128_ctx* ctx, uint8_t* buf, uint32_t length) {
     for (i = 0, bi = AES_BLOCKLEN; i < length; i++, bi++) {
         if (bi == AES_BLOCKLEN) { /* we need to regen xor compliment in buffer */
             memcpy(buffer, ctx->Iv, AES_BLOCKLEN);
-            if (cpu_caps_aes_ni)
-                cipher_aes128_ni(buffer, ctx->RoundKeyNI);
-            else
-                cipher_aes128((state_t*)buffer, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+            cipher_aes128_ni(buffer, ctx->RoundKeyNI);
+#else
+            cipher_aes128((state_t*)buffer, ctx->RoundKey);
+#endif
 
             /* Increment Iv and handle overflow */
             for (bi = (AES_BLOCKLEN - 1); bi >= 0; bi--) {
@@ -1293,10 +1283,11 @@ void aes192_ctr_xcrypt_buffer(aes192_ctx* ctx, uint8_t* buf, uint32_t length) {
     for (i = 0, bi = AES_BLOCKLEN; i < length; i++, bi++) {
         if (bi == AES_BLOCKLEN) { /* we need to regen xor compliment in buffer */
             memcpy(buffer, ctx->Iv, AES_BLOCKLEN);
-            if (cpu_caps_aes_ni)
-                cipher_aes192_ni(buffer, ctx->RoundKeyNI);
-            else
-                cipher_aes192((state_t*)buffer, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+            cipher_aes192_ni(buffer, ctx->RoundKeyNI);
+#else
+            cipher_aes192((state_t*)buffer, ctx->RoundKey);
+#endif
 
             /* Increment Iv and handle overflow */
             for (bi = (AES_BLOCKLEN - 1); bi >= 0; bi--) {
@@ -1323,10 +1314,11 @@ void aes256_ctr_xcrypt_buffer(aes256_ctx* ctx, uint8_t* buf, uint32_t length) {
     for (i = 0, bi = AES_BLOCKLEN; i < length; i++, bi++) {
         if (bi == AES_BLOCKLEN) { /* we need to regen xor compliment in buffer */
             memcpy(buffer, ctx->Iv, AES_BLOCKLEN);
-            if (cpu_caps_aes_ni)
-                cipher_aes256_ni(buffer, ctx->RoundKeyNI);
-            else
-                cipher_aes256((state_t*)buffer, ctx->RoundKey);
+#if defined(__SSE2__) && defined(__AES__)
+            cipher_aes256_ni(buffer, ctx->RoundKeyNI);
+#else
+            cipher_aes256((state_t*)buffer, ctx->RoundKey);
+#endif
 
             /* Increment Iv and handle overflow */
             for (bi = (AES_BLOCKLEN - 1); bi >= 0; bi--) {

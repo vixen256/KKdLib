@@ -6,7 +6,10 @@
 #define _AES_H_
 
 #include "default.hpp"
+
+#if defined(__SSE2__) && defined(__AES__)
 #include <immintrin.h>
+#endif
 
 //#define AES128 1
 //#define AES192 1
@@ -24,7 +27,9 @@
 struct aes128_ctx {
     union {
         uint8_t RoundKey[AES128_keyExpSize];
+#if defined(__SSE2__) && defined(__AES__)
         __m128i RoundKeyNI[AES128_keyExpSize / sizeof(__m128i) + 9];
+#endif
     };
     uint8_t Iv[AES_BLOCKLEN];
 };
@@ -32,7 +37,9 @@ struct aes128_ctx {
 struct aes192_ctx {
     union {
         uint8_t RoundKey[AES192_keyExpSize];
+#if defined(__SSE2__) && defined(__AES__)
         __m128i RoundKeyNI[AES192_keyExpSize / sizeof(__m128i) + 11];
+#endif
     };
     uint8_t Iv[AES_BLOCKLEN];
 };
@@ -40,7 +47,9 @@ struct aes192_ctx {
 struct aes256_ctx {
     union {
         uint8_t RoundKey[AES256_keyExpSize];
+#if defined(__SSE2__) && defined(__AES__)
         __m128i RoundKeyNI[AES256_keyExpSize / sizeof(__m128i) + 13];
+#endif
     };
     uint8_t Iv[AES_BLOCKLEN];
 };
