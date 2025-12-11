@@ -13,10 +13,6 @@
 #define ALIGN(n) __declspec(align(n))
 
 #ifdef __APPLE__
-#ifndef ssize_t
-typedef int64_t ssize_t;
-#endif
-
 #ifndef float_t
 typedef float float_t;
 #endif
