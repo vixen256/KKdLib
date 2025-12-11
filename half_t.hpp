@@ -6,7 +6,8 @@
 #pragma once
 
 #include "default.hpp"
-#include <immintrin.h>
+#include "simde/simde/x86/sse.h"
+#include "simde/simde/x86/sse2.h"
 
 #define FLOAT16_NAN           ((half_t)0x7FFF)
 #define FLOAT16_POSITIVE_NAN  ((half_t)0x7FFF)
