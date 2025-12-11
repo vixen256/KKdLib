@@ -23,6 +23,7 @@
 #pragma warning(push)
 #pragma warning(disable: 26812)
 #else
+
 #ifdef __APPLE__
 #include <libkern/OSByteOrder.h>
 #define _byteswap_ushort NXSwapShort
@@ -33,13 +34,14 @@
 #define _byteswap_ushort bswap_16
 #define _byteswap_ulong bswap_32
 #define _byteswap_uint64 bswap_64
+#include <sys/timerfd.h>
 #endif
+
 #include <dirent.h>
 #include <errno.h>
 #include <poll.h>
 #include <time.h>
 #include <stdarg.h>
-#include <sys/timerfd.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #define _Check_return_ __attribute__((warn_unused_result))
