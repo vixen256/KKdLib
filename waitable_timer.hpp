@@ -10,14 +10,14 @@
 struct waitable_timer {
 #if defined(_WIN32)
     HANDLE handle;
-#elif defined(__GLIBC__)
+#elif defined(__gnu_linux__)
     int fd;
 #endif
 
     inline waitable_timer() {
 #ifdef _WIN32
         handle = CreateWaitableTimerW(0, 0, 0);
-#elif defined(__GLIBC__)
+#elif defined(__gnu_linux__)
         fd = timerfd_create(CLOCK_MONOTONIC, 0);
 #endif
     }
@@ -28,7 +28,7 @@ struct waitable_timer {
             CloseHandle(handle);
             handle = 0;
         }
-#elif defined(__GLIBC__)
+#elif defined(__gnu_linux__)
         if (fd > -1) {
             close(fd);
             fd = 0;
@@ -52,7 +52,7 @@ struct waitable_timer {
             if (msec_dw)
                 Sleep(msec_dw);
         }
-#elif defined(__GLIBC__)
+#elif defined(__gnu_linux__)
         if (fd > -1) {
             struct itimerspec wait_time;
             wait_time.it_value.tv_sec = msec / 1000;
@@ -96,7 +96,7 @@ struct waitable_timer {
             if (msec_dw)
                 Sleep(msec_dw);
         }
-#elif defined(__GLIBC__)
+#elif defined(__gnu_linux__)
         if (fd > -1) {
             struct itimerspec wait_time;
             wait_time.it_value.tv_sec = msec / 1000.0;

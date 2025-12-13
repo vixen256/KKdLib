@@ -255,6 +255,10 @@ namespace prj {
     private:
         template<class U>
         void reset_ptr(U* ptr) {
+#if defined(__wasi__)
+            // No exceptions
+            this->reset_base(ptr, new ref_count<U>(ptr));
+#else
             try {
                 this->reset_base(ptr, new ref_count<U>(ptr));
             }
@@ -262,6 +266,7 @@ namespace prj {
                 delete ptr;
                 throw;
             }
+#endif
         }
     };
 

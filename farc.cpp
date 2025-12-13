@@ -246,7 +246,7 @@ void farc::read(const wchar_t* path, bool unpack, bool save) {
 
     files.clear();
 
-#ifdef _WIN32
+#if defined(_WIN32)
     wchar_t full_path_buf[MAX_PATH];
     wchar_t* full_path = _wfullpath(full_path_buf, path, MAX_PATH);
 
@@ -263,6 +263,18 @@ void farc::read(const wchar_t* path, bool unpack, bool save) {
     file_path.assign(dir_temp, dir_temp_len);
     directory_path.assign(dir_temp, dir_temp_len);
     free_def(dir_temp);
+#elif defined(__wasi__)
+    // WASI doesnt have the concept of absolute paths
+    char* path_temp = utf16_to_utf8(path);
+    if (!path_temp)
+        return;
+    else if (!path_check_file_exists(path_temp))
+        return;
+
+    size_t path_temp_len = utf8_length(path_temp);
+    file_path.assign(path_temp, path_temp_len);
+    directory_path.assign(path_temp, path_temp_len);
+    free_def(path_temp);
 #else
     char* path_temp = utf16_to_utf8(path);
     char* full_path_buf = nullptr;
@@ -375,7 +387,7 @@ void farc::write(const wchar_t* path, farc_signature signature,
     if (get_files)
         files.clear();
 
-#ifdef _WIN32
+#if defined(_WIN32)
     wchar_t full_path_buf[MAX_PATH];
     wchar_t* full_path = _wfullpath(full_path_buf, path, MAX_PATH);
 
@@ -394,6 +406,20 @@ void farc::write(const wchar_t* path, farc_signature signature,
     if (add_extension)
         file_path.append(".farc");
     free_def(dir_temp);
+#elif defined(__wasi__)
+    // WASI doesnt have the concept of absolute paths
+    char* path_temp = utf16_to_utf8(path);
+    if (!path_temp)
+        return;
+    else if (!path_check_file_exists(path_temp))
+        return;
+
+    size_t path_temp_len = utf8_length(path_temp);
+    file_path.assign(path_temp, path_temp_len);
+    directory_path.assign(path_temp, path_temp_len);
+    if (add_extension)
+        file_path.append(".farc");
+    free_def(path_temp);
 #else
     char* path_temp = utf16_to_utf8(path);
     char* full_path_buf = nullptr;

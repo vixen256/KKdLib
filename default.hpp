@@ -35,7 +35,11 @@
 #define _byteswap_ushort bswap_16
 #define _byteswap_ulong bswap_32
 #define _byteswap_uint64 bswap_64
+
+#ifdef __gnu_linux__
 #include <sys/timerfd.h>
+#endif
+
 #endif
 
 #include <dirent.h>

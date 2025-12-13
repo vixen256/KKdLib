@@ -12,15 +12,7 @@
 #define FASTCALL __fastcall
 #define ALIGN(n) __declspec(align(n))
 
-#ifdef __APPLE__
-#ifndef float_t
-typedef float float_t;
-#endif
-
-#ifndef double_t
-typedef double double_t;
-#endif
-#else
+#if defined(_WIN32) || defined(__gnu_linux__)
 #ifdef ssize_t
 #undef ssize_t
 #endif
@@ -35,4 +27,12 @@ typedef float float_t;
 #undef double_t
 #endif
 typedef double double_t;
+#else
+#ifndef float_t
+typedef float float_t;
+#endif
+
+#ifndef double_t
+typedef double double_t;
+#endif
 #endif

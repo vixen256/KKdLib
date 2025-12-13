@@ -725,7 +725,7 @@ std::vector<std::wstring> path_get_directories_recursive(
 }
 
 void path_get_full_path(_Inout_ std::string& str) {
-#ifdef _WIN32
+#if defined(_WIN32)
     wchar_t buf[MAX_PATH * 2];
     buf[0] = 0;
     wchar_t* utf16_temp = utf8_to_utf16(str.c_str());
@@ -737,6 +737,8 @@ void path_get_full_path(_Inout_ std::string& str) {
     if (utf8_temp)
         str.assign(utf8_temp);
     free_def(utf8_temp);
+#elif defined(__wasi__)
+    // WASI doesnt have the concept of absolute paths
 #else
     char* buf = nullptr;
     if (!path_check_file_exists(str.c_str())) {
@@ -753,11 +755,13 @@ void path_get_full_path(_Inout_ std::string& str) {
 }
 
 void path_get_full_path(_Inout_ std::wstring& str) {
-#ifdef _WIN32
+#if defined(_WIN32)
     wchar_t buf[MAX_PATH * 2];
     buf[0] = 0;
     GetFullPathNameW(str.c_str(), MAX_PATH * 2, buf, 0);
     str.assign(buf);
+#elif defined(__wasi__)
+    // WASI doesnt have the concept of absolute paths
 #else
     char* utf8_temp = utf16_to_utf8(str.c_str());
     if (!utf8_temp) return;
