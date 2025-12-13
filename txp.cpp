@@ -52,6 +52,8 @@ int32_t txp::get_size(txp_format format, int32_t width, int32_t height) {
     case TXP_BC3:
     case TXP_BC4:
     case TXP_BC5:
+    case TXP_BC7:
+    case TXP_BC6H:
         width = align_val(width, 4);
         height = align_val(height, 4);
         size = width * height;
@@ -67,6 +69,10 @@ int32_t txp::get_size(txp_format format, int32_t width, int32_t height) {
         case TXP_BC4:
             return size / 2;
         case TXP_BC5:
+            return size;
+        case TXP_BC7:
+            return size;
+        case TXP_BC6H:
             return size;
         }
         break;

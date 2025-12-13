@@ -24,6 +24,10 @@ enum txp_format {
     TXP_BC5    = 11,
     TXP_L8     = 12,
     TXP_L8A8   = 13,
+
+    // MM+
+    TXP_BC7    = 15,
+    TXP_BC6H   = 127,
 };
 
 struct txp_mipmap {
