@@ -255,7 +255,7 @@ namespace prj {
     private:
         template<class U>
         void reset_ptr(U* ptr) {
-#if defined(__wasi__)
+#if defined(__wasm__)
             // No exceptions
             this->reset_base(ptr, new ref_count<U>(ptr));
 #else

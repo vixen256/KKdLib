@@ -6,6 +6,7 @@
 #pragma once
 
 #define SIMDE_ENABLE_NATIVE_ALIASES
+#define SIMDE_FLOAT16_API SIMDE_FLOAT16_API_PORTABLE
 #define NOMINMAX
 #define _USE_MATH_DEFINES
 #include "types.hpp"
