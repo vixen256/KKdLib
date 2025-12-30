@@ -12,7 +12,7 @@
 #define NOMINMAX
 #define _USE_MATH_DEFINES
 #include "types.hpp"
-#include <math.h>
+#include <cmath>
 #include "prj/math.hpp"
 #include <stdio.h>
 #include <stdlib.h>
