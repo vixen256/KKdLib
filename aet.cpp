@@ -1453,7 +1453,8 @@ static void aet_modern_read_fcurve(aet_fcurve* fcurve,
         float_t* key = alloc->allocate<float_t>(fcurve->keys_count * 3ULL);
         fcurve->keys = key;
 
-        s.read(key, fcurve->keys_count * 3ULL * sizeof(float_t));
+        for (uint32_t i = 0; i < fcurve->keys_count * 3; i++)
+            key[i] = s.read_float_t_reverse_endianness();
     }
     else if (fcurve->keys_count) {
         float_t* key = alloc->allocate<float_t>();
@@ -1526,7 +1527,7 @@ static void aet_modern_read_layer(aet_layer* layer,
         s.position_pop();
     }
     else
-        layer->audio = 0;
+        layer->markers = 0;
 
     layer->video = aet_modern_read_layer_video(alloc, s, alh.video_offset, header_length, is_x);
     layer->audio = aet_modern_read_layer_audio(alloc, s, alh.audio_offset, header_length, is_x);
