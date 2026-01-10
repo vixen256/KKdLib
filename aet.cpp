@@ -722,7 +722,7 @@ static void aet_set_classic_write_inner(aet_set* as, stream& s) {
             offsets[scene->audio] = s.get_position();
             const aet_audio* audio = scene->audio;
             for (uint32_t j = scene->audio_count; j; j--, audio++)
-                aet_classic_write_audio(&scene->audio[j], s, offsets);
+                aet_classic_write_audio(audio, s, offsets);
         }
     }
 
@@ -824,6 +824,7 @@ static void aet_set_classic_write_inner(aet_set* as, stream& s) {
                 s.write_uint8_t((uint8_t)layer->quality);
                 s.write_uint8_t((uint8_t)layer->item_type);
                 if (layer->item_type == AET_ITEM_TYPE_VIDEO
+                    || layer->item_type == AET_ITEM_TYPE_AUDIO
                     || layer->item_type == AET_ITEM_TYPE_COMPOSITION)
                     s.write_uint32_t((uint32_t)offsets[layer->item.none]);
                 else
@@ -1159,6 +1160,7 @@ static void aet_classic_read_layer(aet_layer* layer,
     layer->quality = (aet_layer_quality)s.read_uint8_t();
     layer->item_type = (aet_item_type)s.read_uint8_t();
     if (layer->item_type == AET_ITEM_TYPE_VIDEO
+        || layer->item_type == AET_ITEM_TYPE_AUDIO
         || layer->item_type == AET_ITEM_TYPE_COMPOSITION)
         layer->item.none = (void*)(size_t)s.read_uint32_t();
     else
@@ -1495,6 +1497,7 @@ static void aet_modern_read_layer(aet_layer* layer,
         layer->quality = (aet_layer_quality)s.read_uint8_t();
         layer->item_type = (aet_item_type)s.read_uint8_t();
         if (layer->item_type == AET_ITEM_TYPE_VIDEO
+            || layer->item_type == AET_ITEM_TYPE_AUDIO
             || layer->item_type == AET_ITEM_TYPE_COMPOSITION)
             layer->item.none = (void*)(size_t)s.read_offset_f2(header_length);
         else
@@ -1517,6 +1520,7 @@ static void aet_modern_read_layer(aet_layer* layer,
         layer->quality = (aet_layer_quality)s.read_uint8_t();
         layer->item_type = (aet_item_type)s.read_uint8_t();
         if (layer->item_type == AET_ITEM_TYPE_VIDEO
+            || layer->item_type == AET_ITEM_TYPE_AUDIO
             || layer->item_type == AET_ITEM_TYPE_COMPOSITION)
             layer->item.none = (void*)s.read_offset_x();
         else
@@ -1755,6 +1759,7 @@ static void aet_comp_set_item_parent(const aet_comp* comp,
     aet_layer* layer = (aet_layer*)comp->layers;
     for (uint32_t i = comp->layers_count; i; i--, layer++) {
         if (layer->item_type == AET_ITEM_TYPE_VIDEO
+            || layer->item_type == AET_ITEM_TYPE_AUDIO
             || layer->item_type == AET_ITEM_TYPE_COMPOSITION) {
             int64_t item_offset = (int64_t)layer->item.none;
             layer->item.none = 0;
