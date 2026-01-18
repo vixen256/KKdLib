@@ -210,7 +210,7 @@ inline quat quat::mul(const quat& in_q1, const quat& in_q2) {
     zt1 = _mm_mul_ps(xt, _mm_shuffle_ps(yt, yt, 0x4E));
     zt2 = _mm_mul_ps(xt, _mm_shuffle_ps(yt, yt, 0xB1));
     zt3 = _mm_mul_ps(xt, _mm_shuffle_ps(yt, yt, 0xE4));
-#ifdef _MSC_VER
+#ifdef _MSVC_VER
     zt0 = _mm_xor_ps(zt0, __m128({ 0.0f,  0.0f, -0.0f, 0.0f }));
     zt1 = _mm_xor_ps(zt1, __m128({ -0.0f,  0.0f,  0.0f, 0.0f }));
     zt2 = _mm_xor_ps(zt2, __m128({ 0.0f, -0.0f,  0.0f, 0.0f }));
